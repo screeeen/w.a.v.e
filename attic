@@ -1,0 +1,145 @@
+
+// // INPUT
+
+//     if (key == 'r') {
+//       if (!rot) {
+//         rot = true;
+//         println("rot " + rot);
+//       } else {
+//         rot = false;
+//         println("rot " + rot);
+//       }
+//     }
+  
+//     if (key == 'f') {
+//       if (!fil) {
+//         fil = true;
+//         println("fil " + fil);
+//       } else {
+//         fil = false;
+//         println("fil " + fil);
+//       }
+//     }
+  
+//     if (key == 's') {
+//       if (!str) {
+//         str = true;
+//         println("str " + str);
+//       } else {
+//         str = false;
+//         println("str " + str);
+//       }
+//     }
+  
+//     if (key == 'a') {
+//       if (sin) {
+//         sin = false;
+//         println("sin " + sin);
+//       } else {
+//         sin = true;
+//         println("sin " + sin);
+//       }
+//     }
+  
+//     if (key == 'x') {
+//       punto = new PVector(random(0, 20), random(0, 20));
+//       println("punto " + punto);
+//     }
+  
+  
+//       //direction
+//       if (key == '1')
+//         direction+=1;
+//         direction = direction %8;
+//         println("dir " + direction);
+      
+//       //size
+//       if (key == 'o')
+//         size -= 2;
+//         println("size " + size);
+  
+//       if (key == 'p')
+//         size += 2;
+//         println("size " + size);
+  
+//       if (key == 'k')
+//         strokeRange -= 2;
+//          println("strokeRange " + strokeRange);
+  
+//       if (key == 'l')
+//         strokeRange += 2;
+//         println("strokeRange " + strokeRange);
+  
+//       if (key == 'x') {
+//         r+=4;
+//         println("r " + r);
+//       }
+  
+//       if (key == 'c') {
+//         r-=4;
+//         println("r " + r);
+//       }
+  
+//       if (key == 'n') {
+//         freq+=1;
+//         println("freq " + freq);
+//       }
+  
+//       if (key == 'm') {
+//         freq-=1;
+//         println("freq " + freq);
+//       }
+//   }
+// }
+
+
+
+// void controllerChange(int channel, int number, int value) {
+//   // Here we print the controller number.
+//   println(number);
+
+//   // If we turn knob with id 104, draw a line
+//   // The vertical position of the line depends on how much we turn the knob
+
+//   if (number == 7) {
+//     float y = map(value, 0, 80000, 0, 80000);
+//     size = (int)y;
+//     println(size);
+//     //columns = (int)y;
+//   }
+
+//   if (number == 74) {
+//     float tr = map(value, 0, 8000000, 0, 8000000);
+//     size = (int)tr;
+//     println(size);
+//     //rows = (int)y;
+//   }
+
+//   if (number == 19) {
+//     float y = map(value, 0, 3, 0, 3);
+//     direction = (int)y %6;
+//     print ("dir" + direction);
+//   }
+
+//   if (number == 71) {
+//     float y = map(value, 0, 127, 0, 127);
+//     colorRange = (int)y*2;
+//     strokeRange = (int)255-y*2;
+//     print("c" + colorRange + "strk" + strokeRange);
+//   }
+
+//   if (number == 76) {
+//     float y = map(value, 0, 255, 0, height);
+//     noStroke();
+//     colorMode(RGB, y*2);
+//     stroke(y*2);
+//   }
+// }
+
+/*
+  for(int i = 0; i < player.bufferSize() - 1; i++)
+ {
+ line(i, 50 + player.left.get(i)*50, i+1, 50 + player.left.get(i+1)*50);
+ //line(i, 150 + player.right.get(i)*50, i+1, 150 + player.right.get(i+1)*50);
+ }
+ */

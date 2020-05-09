@@ -17,6 +17,7 @@ int rows = 8;
 int columns = 8;
 boolean inputMode = false; //activates keyboard
 int currentShape = 0; //activates keyboard
+boolean currentRotation = false; //activates keyboard
 Module[] mods;
 int count;
 
@@ -64,57 +65,68 @@ void draw()
 class Module {
   int x;
   int y;
-  // int w = 2;
-  // int h = 2;
   int colorRange = 1;
   float strokeRange = 255;
   int shape = 0;  
   int size = 2;
-  boolean rot = false;
+  boolean rotation = false;
   boolean fil = false;
   boolean str = true;
   boolean sin = false;
-  float freq, spd;
+  float freq = 10;
+  float speed = 1;
 
-  //constructor
-  Module(int xPos,int yPos)//,int width,int height,int colorRange, float strokeRange, int shape, int size, boolean rot, boolean fil, boolean str, boolean sin, float freq, float spd)
+  Module(int xPos,int yPos)
   {
   x = xPos;
   y =  yPos;
-  // w = size;
-  // h = size;
-  // colorRange = colorRange;
-  // strokeRange = strokeRange;
-  // shape = shape;
-  // size = size;
-  // rot = rot;
-  // fil = fil;
-  // str = str;
-  // sin = sin;
-  // freq = freq;
-  // spd = spd;
   }
 
   void update (){
-
+    if (rotation)
+    rotate(PI*speed);
   }
 
   void changeShape (int i) {
     shape = i;
   }
 
-   // Custom method for drawing the object
+    void changeRotation (boolean r) {
+    rotation = r;
+  }
+
   void display() {
     fill(255);
-    // println(x,y);
-   // line(x,y, x+1,0 + in.left.get(x+1)*y+y);
-    // line(x, 0 + in.left.get(x)*y+y, x+1,0 + in.left.get(x+1)*y+y);
     switch (shape) {
       case 0: // screen dots      
         ellipse(x, in.left.get(x)*y+y, size, size);
         break;
       case 1: // waveform
         ellipse(x, width/2 + in.left.get(x)*width/2, size,size);
+        break;
+         case 2: // blocks
+        rect(x + size/2, y+size/2+in.left.get(x),size,size);
+        break;
+      case 3: //triangles
+        triangle(x, y+in.left.get(x)*size, x+size/2,y+ size+in.left.get(x)*size, x+size + in.left.get(x)*size, y-size + in.left.get(x)*size );
+        break;
+      case 4: // circles
+          ellipse(x, y, in.left.get(x)*size, in.left.get(x)*size);
+        break;
+      case 5: // circles
+          //line(x, y, in.left.get(x)*size, in.left.get(x)*size);
+          line(x,y, x+1,0 + in.left.get(x+1)*y+y);
+        break;
+      case 6:
+        line(x, height/2, x, (height/2)+sin(TWO_PI/0.180)*abs(in.left.get(x)*1000));    
+        break;
+      case 7:
+        // beginShape();
+        // int angle = x * 360 / 6 * (PI / 180);
+        //  x = x + height * cos(size);
+        //  y = y + width * sin(size);
+        // vertex(x + width, y + height);
+        // endShape(CLOSE);
         break;
   }
   }
@@ -138,6 +150,18 @@ void keyPressed()
       for (Module mod : mods) {
     mod.changeShape(currentShape);
     }
+
+    if (key == 'r')
+      if (!currentRotation) 
+        currentRotation = true;
+      else 
+        currentRotation = false;
+      println("rot " + currentRotation);
+    for (Module mod : mods) {
+    mod.changeRotation(currentRotation);
+    }
+    
+
   }
 
 
