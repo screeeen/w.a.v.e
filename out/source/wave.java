@@ -39,11 +39,14 @@ MidiBus myBus;
 
 int rows = 8;
 int columns = 8;
-boolean inputMode = false; //activates keyboard
-int currentShape = 0; //activates keyboard
-boolean currentRotation = false; //activates keyboard
+int currentShape = 0;
+int currentSize = 2;
+float currentSpeed = 2;
+boolean currentRotation = false; 
 Module[] mods;
 int count;
+boolean overlay = true;
+String consoleText = "";
 
 public void setup() 
 {
@@ -59,12 +62,10 @@ public void setup()
   // Connect to one of the devices
   myBus = new MidiBus(this, 0, 1);
 
-
   noStroke();
   int highCount = height / rows;
   int wideCount =  width / columns;
   count = wideCount * highCount;
-  println('h',height,'w',width,wideCount,highCount,count);
   mods = new Module[count];
 
   int index = 0;
@@ -72,7 +73,7 @@ public void setup()
     for(int xCor = 0; xCor < wideCount ; xCor++) // in.bufferSize() - 1
     {
       mods[index++] = new Module (xCor*rows,yCor*columns);
-      // println(y,x);
+      // consoleText = y,x;
     }
   }
 }
@@ -84,7 +85,18 @@ public void draw()
     mod.update();
     mod.display();
   }
+   if (overlay) {
+      fill(100);
+      rect(0,height - 22,width,20);
+      fill(255);
+       text("Z	enable input mode - 1	changes shape	- r	rotates " + consoleText, 0, height-10);
+
+
+  }
+
 }
+
+// THIS IS THE MODULE
 
 class Module {
   int x;
@@ -94,20 +106,20 @@ class Module {
   int shape = 0;  
   int size = 2;
   boolean rotation = false;
-  boolean fil = false;
-  boolean str = true;
-  boolean sin = false;
-  float freq = 10;
+  // boolean fil = false;
+  // boolean str = true;
+  // boolean sin = false;
+  // float freq = 10;
   float speed = 1;
 
-  Module(int xPos,int yPos)
-  {
+  Module(int xPos,int yPos){
   x = xPos;
   y =  yPos;
   }
 
   public void update (){
     if (rotation)
+    translate(width/2, height/2);
     rotate(PI*speed);
   }
 
@@ -115,34 +127,43 @@ class Module {
     shape = i;
   }
 
-    public void changeRotation (boolean r) {
+  public void changeRotation (boolean r) {
     rotation = r;
   }
 
+  public void changeSize (int s) {
+    size = s;
+  }
+
+  public void changeSpeed (float spd) {
+    speed = spd;
+  }
+
   public void display() {
+    float magnitude = in.left.get(x);
     fill(255);
     switch (shape) {
       case 0: // screen dots      
-        ellipse(x, in.left.get(x)*y+y, size, size);
+        ellipse(x, magnitude*size*y+y, size, size);
         break;
       case 1: // waveform
-        ellipse(x, width/2 + in.left.get(x)*width/2, size,size);
+        ellipse(x, width/2 + magnitude*width/2, size,size);
         break;
          case 2: // blocks
-        rect(x + size/2, y+size/2+in.left.get(x),size,size);
+        rect(x + size/2, y+size/2+magnitude,size,size);
         break;
       case 3: //triangles
-        triangle(x, y+in.left.get(x)*size, x+size/2,y+ size+in.left.get(x)*size, x+size + in.left.get(x)*size, y-size + in.left.get(x)*size );
+        triangle(x, y+magnitude*size, x+size/2,y+ size+magnitude*size, x+size + magnitude*size, y-size + magnitude*size );
         break;
       case 4: // circles
-          ellipse(x, y, in.left.get(x)*size, in.left.get(x)*size);
+          ellipse(x, y, magnitude*size, magnitude*size);
         break;
       case 5: // circles
-          //line(x, y, in.left.get(x)*size, in.left.get(x)*size);
+          //line(x, y, magnitude*size, magnitude*size);
           line(x,y, x+1,0 + in.left.get(x+1)*y+y);
         break;
       case 6:
-        line(x, height/2, x, (height/2)+sin(TWO_PI/0.180f)*abs(in.left.get(x)*1000));    
+        line(x, height/2, x, (height/2)+sin(TWO_PI/0.180f)*abs(magnitude*1000));    
         break;
       case 7:
         // beginShape();
@@ -156,21 +177,21 @@ class Module {
   }
 }
 
+
 // INPUT
 public void keyPressed()
 {
-   if (key == 'z') {// { inputmode  ? inputMode = false : inputMode = true; }
-    if (!inputMode) 
-      inputMode = true;
-     else 
-      inputMode = false;
-      println("input mode " + inputMode);
+   if (key == 'z') {
+      if (overlay)
+        overlay = false; 
+      else 
+        overlay = true;
   }
 
   if (key == '1')
     currentShape += 1;
     currentShape = currentShape %8;
-    println("shape " + currentShape);
+    consoleText = ("shape " + currentShape);
       for (Module mod : mods) {
     mod.changeShape(currentShape);
     }
@@ -180,12 +201,28 @@ public void keyPressed()
         currentRotation = true;
       else 
         currentRotation = false;
-      println("rot " + currentRotation);
+      consoleText = ("rot " + currentRotation);
     for (Module mod : mods) {
     mod.changeRotation(currentRotation);
-    }
-    
+    }   
 
+    if (key == 's'){
+    currentSize += 1;
+    currentSize = currentSize %10;
+    consoleText = ("size " + currentSize);
+    }
+    for (Module mod : mods) {
+    mod.changeSize(currentSize);
+    }     
+
+    if (key == 'f'){
+    currentSpeed += .1f;
+    currentSpeed = currentSpeed %10;
+    consoleText = ("speed " + currentSpeed);
+    }
+    for (Module mod : mods) {
+    mod.changeSpeed(currentSpeed);
+    } 
   }
 
 

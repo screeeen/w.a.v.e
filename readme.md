@@ -9,3 +9,7 @@ Wave is a visual software that reacts to music.
 |r  |`rotates`|
 
 
+include minim to run
+CMD+SHIFT+P to launch from vscode
+
+
