@@ -13,12 +13,15 @@ AudioInput input;
 AudioInput in;
 MidiBus myBus;
 
-int rows = 8;
-int columns = 8;
+int rows = 6;
+int columns = 14;
 int currentShape = 0;
 int currentSize = 2;
+int currentDir = 1;
+float currentRate = 1;
 float currentSpeed = 2;
 boolean currentRotation = false; 
+boolean currentRandom= false; 
 Module[] mods;
 int count;
 boolean overlay = true;
@@ -26,32 +29,42 @@ String consoleText = "";
 
 void setup() 
 {
-  size(800, 500, P3D);
-  //fullScreen(P3D);
+  size(1000, 500, P3D);
+  // fullScreen(P3D);
   minim = new Minim(this);
   //in = minim.loadFile("song.mp3");
   //input = minim.getLineIn();
   //in.play();
   in = minim.getLineIn();
   // List all our MIDI devices
-  MidiBus.list();
-  // Connect to one of the devices
-  myBus = new MidiBus(this, 0, 1);
+  // MidiBus.list();
+  // // Connect to one of the devices
+  // myBus = new MidiBus(this, 0, 1);
 
   noStroke();
-  int highCount = height / rows;
-  int wideCount =  width / columns;
-  count = wideCount * highCount;
-  mods = new Module[count];
+  generate();
+}
 
-  int index = 0;
-  for (int yCor = 0; yCor < highCount; yCor++) {
-    for(int xCor = 0; xCor < wideCount ; xCor++) // in.bufferSize() - 1
-    {
-      mods[index++] = new Module (xCor*rows,yCor*columns);
-      // consoleText = y,x;
+void generate(){
+    int highCount = height / columns;
+    int wideCount =  width / rows;
+    count = wideCount * highCount;
+    mods = new Module[count];
+
+    int index = 0;
+    for (int yCor = 0; yCor < highCount; yCor++) {
+      for(int xCor = 0; xCor < wideCount ; xCor++) // in.bufferSize() - 1
+      {
+        mods[index++] = new Module (xCor*rows,yCor*columns);
+        // consoleText = y,x;
+      }
     }
   }
+
+
+void destroyMods(){
+  mods = null;
+    generate();
 }
 
 void draw()
@@ -65,11 +78,8 @@ void draw()
       fill(100);
       rect(0,height - 22,width,20);
       fill(255);
-       text("Z	enable input mode - 1	changes shape	- r	rotates " + consoleText, 0, height-10);
-
-
+      text(consoleText + "Z-show this -1-changes shape - A- audioMagnification - S - size	- R	-rotates -D-randomize - F- faster rotate - G- rotate direction ", 0, height-10);
   }
-
 }
 
 // THIS IS THE MODULE
@@ -78,15 +88,14 @@ class Module {
   int x;
   int y;
   int colorRange = 1;
-  float strokeRange = 255;
+  float strokeRange = 150;
   int shape = 0;  
   int size = 2;
   boolean rotation = false;
-  // boolean fil = false;
-  // boolean str = true;
-  // boolean sin = false;
-  // float freq = 10;
+  boolean randomize = false;
   float speed = 1;
+  int rate = 1;
+  int direction = 1;
 
   Module(int xPos,int yPos){
   x = xPos;
@@ -94,13 +103,31 @@ class Module {
   }
 
   void update (){
-    if (rotation)
-    translate(width/2, height/2);
-    rotate(PI*speed);
+      if (rotation) {
+        overlay = false;
+        translate(width/2,height/2);
+        rotate(radians(speed+=1*direction));
+      }
+
+      if (randomize) {
+        translate(random(0,width/2),random(0,height/2));
+      }
   }
 
   void changeShape (int i) {
     shape = i;
+  }
+
+  void changeRate (float rt) {
+    rate = rate;
+  }
+
+  void setDirection (int dir) {
+    direction = dir;
+  }
+
+  void setRandom (boolean d) {
+    randomize = d;
   }
 
   void changeRotation (boolean r) {
@@ -116,39 +143,27 @@ class Module {
   }
 
   void display() {
-    float magnitude = in.left.get(x);
-    fill(255);
+    float magnitude = in.left.get(x) * abs(speed);
+    // println(speed);
+
     switch (shape) {
-      case 0: // screen dots      
+      case 0: // screen dots 
+      pushMatrix();
         ellipse(x, magnitude*size*y+y, size, size);
-        break;
+          if (rotation) {
+            translate(random(0, width),random(0,height));
+            rotate(PI*radians(speed+=.1));
+          }
+      popMatrix();     
+      break;
       case 1: // waveform
-        ellipse(x, width/2 + magnitude*width/2, size,size);
-        break;
-         case 2: // blocks
-        rect(x + size/2, y+size/2+magnitude,size,size);
-        break;
-      case 3: //triangles
-        triangle(x, y+magnitude*size, x+size/2,y+ size+magnitude*size, x+size + magnitude*size, y-size + magnitude*size );
-        break;
-      case 4: // circles
-          ellipse(x, y, magnitude*size, magnitude*size);
-        break;
-      case 5: // circles
-          //line(x, y, magnitude*size, magnitude*size);
-          line(x,y, x+1,0 + in.left.get(x+1)*y+y);
-        break;
-      case 6:
-        line(x, height/2, x, (height/2)+sin(TWO_PI/0.180)*abs(magnitude*1000));    
-        break;
-      case 7:
-        // beginShape();
-        // int angle = x * 360 / 6 * (PI / 180);
-        //  x = x + height * cos(size);
-        //  y = y + width * sin(size);
-        // vertex(x + width, y + height);
-        // endShape(CLOSE);
-        break;
+        ellipse(x, height/2 + magnitude*height/2, size,size);
+      break;
+      case 2:
+      fill(150);
+      stroke(150);
+      line(x, height/2, x, (height/2)+sin(TWO_PI/0.180)*abs(magnitude*size*1000));          
+      break;
   }
   }
 }
@@ -166,7 +181,7 @@ void keyPressed()
 
   if (key == '1')
     currentShape += 1;
-    currentShape = currentShape %8;
+    currentShape = currentShape %3;
     consoleText = ("shape " + currentShape);
       for (Module mod : mods) {
     mod.changeShape(currentShape);
@@ -188,7 +203,19 @@ void keyPressed()
     consoleText = ("size " + currentSize);
     }
     for (Module mod : mods) {
-    mod.changeSize(currentSize);
+      if (currentRandom)
+        mod.changeSize(currentSize*10);
+        else 
+        mod.changeSize(currentSize);
+    }     
+
+    if (key == 'a'){
+    currentRate += 1.0;
+    currentRate = currentRate %10;
+    consoleText = ("rate " + currentRate);
+    }
+    for (Module mod : mods) {
+        mod.changeRate(currentRate);
     }     
 
     if (key == 'f'){
@@ -199,6 +226,27 @@ void keyPressed()
     for (Module mod : mods) {
     mod.changeSpeed(currentSpeed);
     } 
+
+    if (key == 'd')
+      if (!currentRandom) 
+        currentRandom = true;
+      else 
+        currentRandom = false;
+    consoleText = ("random " + currentRandom);
+    for (Module mod : mods) {
+    mod.setRandom(currentRandom);
+    }   
+
+    if (key == 'g')
+      if (currentDir == -1) 
+        currentDir = 1;
+      else 
+        currentDir = -1;
+    consoleText = ("direction " + currentDir);
+    for (Module mod : mods) {
+    mod.setDirection(currentDir);
+    }  
+
   }
 
 
