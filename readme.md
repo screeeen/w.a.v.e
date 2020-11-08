@@ -1,6 +1,5 @@
 # wave
 
-![wave](wave.jpg)
 ![pin1](pic1.png)
 ![pin2](pic2.png)
 ![pin3](pic3.png)
@@ -18,4 +17,6 @@ Wave is a visual software that reacts to music.
 |r |`rotation mode`|
 
 include minim to run
-CMD+SHIFT+P to launch from vscode
+CMD+SHIFT+B to launch from vscode
+cheers
+![wave](wave.jpg)
