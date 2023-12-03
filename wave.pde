@@ -1,4 +1,4 @@
-import themidibus.*;
+// import themidibus.*;
 
 import ddf.minim.*;
 import ddf.minim.analysis.*;
@@ -7,17 +7,16 @@ import ddf.minim.signals.*;
 import ddf.minim.spi.*;
 import ddf.minim.ugens.*;
 
-Minim minim;
 //AudioPlayer in;
-AudioInput input;
+// AudioInput input;
 AudioInput in;
-MidiBus myBus;
+// MidiBus myBus;
 
 int rows = 6;
 int columns = 14;
 int currentShape = 0;
 int currentSize = 2;
-int currentDir = 1;
+int currentDir = 1;q
 float currentRate = 1;
 float currentSpeed = 2;
 boolean currentRotation = false; 
@@ -33,7 +32,7 @@ void setup()
   // fullScreen(P3D);
   minim = new Minim(this);
   //in = minim.loadFile("song.mp3");
-  //input = minim.getLineIn();
+  input = minim.getLineIn();
   //in.play();
   in = minim.getLineIn();
   // List all our MIDI devices
@@ -47,7 +46,7 @@ void setup()
 
 void generate(){
     int highCount = height / columns;
-    int wideCount =  width / rows;
+    // int wideCount =  width / rows;
     count = wideCount * highCount;
     mods = new Module[count];
 
@@ -55,7 +54,7 @@ void generate(){
     for (int yCor = 0; yCor < highCount; yCor++) {
       for(int xCor = 0; xCor < wideCount ; xCor++) // in.bufferSize() - 1
       {
-        mods[index++] = new Module (xCor*rows,yCor*columns);
+        // mods[index++] = new Module (xCor*rows,yCor*columns);
         // consoleText = y,x;
       }
     }
@@ -248,8 +247,3 @@ void keyPressed()
     }  
 
   }
-
-
-
-
-

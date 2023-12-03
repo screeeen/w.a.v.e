@@ -11,7 +11,7 @@ Minim minim;
 //AudioPlayer in;
 AudioInput input;
 AudioInput in;
-MidiBus myBus;
+// MidiBus myBus;
 
 int rows = 10;
 int columns = 10;
@@ -45,10 +45,10 @@ void setup()
   in = minim.getLineIn();
 
   // List all our MIDI devices
-  MidiBus.list();
+  // MidiBus.list();
    
   // Connect to one of the devices
-  myBus = new MidiBus(this, 0, 1);
+  // myBus = new MidiBus(this, 0, 1);
   
   x = width/2;
   y = height/2;
