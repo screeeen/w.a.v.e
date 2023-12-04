@@ -51,36 +51,39 @@ int count;
 boolean overlay = true;
 String consoleText = "";
 
+float radio;
+float angulo = 0;
+int cantidadPuntos = 100;
+
 public void setup() 
 {
   
   // fullScreen(P3D);
   minim = new Minim(this);
-  //in = minim.loadFile("song.mp3");
-  //input = minim.getLineIn();
-  //in.play();
   in = minim.getLineIn();
-  // List all our MIDI devices
-  // MidiBus.list();
-  // // Connect to one of the devices
-  // myBus = new MidiBus(this, 0, 1);
 
   noStroke();
   generate();
+
+  radio = min(width, height) * 0.4f;
+
 }
 
 public void generate(){
     int highCount = height / columns;
     int wideCount =  width / rows;
+    println(highCount);
+    println(wideCount);
     count = wideCount * highCount;
+    println(count);
+
     mods = new Module[count];
 
     int index = 0;
     for (int yCor = 0; yCor < highCount; yCor++) {
-      for(int xCor = 0; xCor < wideCount ; xCor++) // in.bufferSize() - 1
+      for(int xCor = 0; xCor < wideCount ; xCor++) 
       {
         mods[index++] = new Module (xCor*rows,yCor*columns);
-        // consoleText = y,x;
       }
     }
   }
@@ -98,6 +101,14 @@ public void draw()
     mod.update();
     mod.display();
   }
+
+  //circulo puntos
+  pushMatrix();
+  translate(width / 2, height / 2);
+  drawPuntosCirculo();
+  angulo += 0.002f;
+  popMatrix();
+
    if (overlay) {
       fill(100);
       rect(0,height - 22,width,20);
@@ -106,7 +117,24 @@ public void draw()
   }
 }
 
-// THIS IS THE MODULE
+public void drawPuntosCirculo() {
+  int speed = 1;
+  float incrementoAngulo = TWO_PI / cantidadPuntos;
+  // float magnitude = in.left.get(x) * abs(speed);
+  float vari = in.left.get(200);
+
+  for (float a = 0; a < TWO_PI; a += incrementoAngulo) {
+    // float x = radio * cos(a + angulo);
+    // float y = radio * sin(a + angulo);
+    float x = radio * cos(a + angulo)*vari;
+    float y = radio  * sin(a + angulo);
+
+    // Dibuja cada punto
+    fill(255);
+    noStroke();
+    ellipse(x, y, 5, 5);
+  }
+}
 
 class Module {
   int x;
@@ -129,8 +157,8 @@ class Module {
   public void update (){
       if (rotation) {
         overlay = false;
-        translate(width/2,height/2);
-        rotate(radians(speed+=1*direction));
+        translate(500, 250);
+        rotate(PI*(speed+=1));
       }
 
       if (randomize) {
@@ -168,17 +196,16 @@ class Module {
 
   public void display() {
     float magnitude = in.left.get(x) * abs(speed);
-    // println(speed);
 
     switch (shape) {
       case 0: // screen dots 
-      pushMatrix();
-        ellipse(x, magnitude*size*y+y, size, size);
-          if (rotation) {
-            translate(random(0, width),random(0,height));
-            rotate(PI*radians(speed+=.1f));
-          }
-      popMatrix();     
+      // pushMatrix();
+      //   ellipse(x, magnitude*size*y+y, size, size);
+      //     if (rotation) {
+      //       translate(random(0, width),random(0,height));
+      //       rotate(PI*radians(speed+=.1));
+      //     }
+      // popMatrix();     
       break;
       case 1: // waveform
         ellipse(x, height/2 + magnitude*height/2, size,size);
