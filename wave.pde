@@ -8,7 +8,7 @@ import ddf.minim.spi.*;
 import ddf.minim.ugens.*;
 
 Minim minim;
-//AudioPlayer in;
+FFT fft;
 AudioInput input;
 AudioInput in;
 MidiBus myBus;
@@ -29,7 +29,7 @@ String consoleText = "";
 
 float radio;
 float angulo = 0;
-int cantidadPuntos = 100;
+int cantidadPuntos = 40;
 
 void setup() 
 {
@@ -41,7 +41,7 @@ void setup()
   noStroke();
   generate();
 
-  radio = min(width, height) * 0.4;
+  
 
 }
 
@@ -98,17 +98,29 @@ void drawPuntosCirculo() {
   float incrementoAngulo = TWO_PI / cantidadPuntos;
   // float magnitude = in.left.get(x) * abs(speed);
   float vari = in.left.get(200);
+  fft = new FFT( in.bufferSize(), in.sampleRate());
+  fft.forward( in.mix );
 
-  for (float a = 0; a < TWO_PI; a += incrementoAngulo) {
-    // float x = radio * cos(a + angulo);
-    // float y = radio * sin(a + angulo);
-    float x = radio * cos(a + angulo)*vari;
-    float y = radio  * sin(a + angulo);
+    for(int i = 0; i < fft.specSize(); i++) {
+    // draw the line for frequency band i, scaling it up a bit so we can see it
+    line( i, height, i, height - fft.getBand(i)*8 );
+  }
+
+  radio = min(width, height) *  vari + height/3+100;
+  
+   println(min(width, height));
+
+  for (float i = 0; i < fft.specSize(); i += incrementoAngulo + int(vari)) {
+    
+    float x = radio * cos(i + angulo)* fft.getBand(int(i)*2);
+    float y = radio * sin(i + angulo)* fft.getBand(int(i)*2);
+
+    // println(fft.specSize());
 
     // Dibuja cada punto
     fill(255);
     noStroke();
-    ellipse(x, y, 5, 5);
+    ellipse(x, y, 2, 2);
   }
 }
 
