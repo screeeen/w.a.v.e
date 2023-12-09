@@ -47,13 +47,12 @@ float currentSpeed = 2;
 boolean currentRotation = false; 
 boolean currentRandom= false; 
 Module[] mods;
+Circle circle;
 int count;
 boolean overlay = true;
 String consoleText = "";
 
-float radio;
-float angulo = 0;
-int cantidadPuntos = 40;
+
 
 public void setup() 
 {
@@ -72,8 +71,6 @@ public void setup()
 public void generate(){
     int highCount = height / columns;
     int wideCount =  width / rows;
-    println(highCount);
-    println(wideCount);
     count = wideCount * highCount;
     println(count);
 
@@ -86,6 +83,8 @@ public void generate(){
         mods[index++] = new Module (xCor*rows,yCor*columns);
       }
     }
+
+    circle = new Circle (); 
   }
 
 
@@ -102,50 +101,59 @@ public void draw()
     mod.display();
   }
 
-  //circulo puntos
-  pushMatrix();
-  translate(width / 2, height / 2);
-  drawPuntosCirculo();
-  angulo += 0.002f;
-  popMatrix();
+  circle.display();
 
-   if (overlay) {
-      fill(100);
-      rect(0,height - 22,width,20);
-      fill(255);
-      text(consoleText + "Z-show this -1-changes shape - A- audioMagnification - S - size	- R	-rotates -D-randomize - F- faster rotate - G- rotate direction ", 0, height-10);
+  if (overlay) {
+    fill(100);
+    rect(0,height - 22, width, 20);
+    fill(255);
+    text(consoleText + "Z-show this -1-changes shape - A- audioMagnification - S - size	- R	-rotates -D-randomize - F- faster rotate - G- rotate direction ", 0, height-10);
   }
+
 }
 
-public void drawPuntosCirculo() {
+
+class Circle {
+  float radio;
+  float angulo = 0;
+  int cantidadPuntos = 40;
+  int size = 2;
   int speed = 1;
-  float incrementoAngulo = TWO_PI / cantidadPuntos;
-  // float magnitude = in.left.get(x) * abs(speed);
-  float vari = in.left.get(200);
-  fft = new FFT( in.bufferSize(), in.sampleRate());
-  fft.forward( in.mix );
+  float magnitude;
 
-    for(int i = 0; i < fft.specSize(); i++) {
-    // draw the line for frequency band i, scaling it up a bit so we can see it
-    line( i, height, i, height - fft.getBand(i)*8 );
-  }
+  Circle (){}
 
-  radio = min(width, height) *  vari + height/3+100;
-  
-   println(min(width, height));
+  public void display() {
+    pushMatrix();
+    translate(width / 2, height / 2);
+    float incrementoAngulo = TWO_PI / cantidadPuntos;
+    magnitude = in.left.get(200);
+    // angulo += 0.002 * magnitude;
+    angulo += 0.002f;
+    // float magnitude = in.left.get(x) * abs(speed);
+    // fft = new FFT( in.bufferSize(), in.sampleRate());
+    // fft.forward( in.mix );
 
-  for (float i = 0; i < fft.specSize(); i += incrementoAngulo + PApplet.parseInt(vari)) {
+    //   for(int i = 0; i < fft.specSize(); i++) {
+    //   // draw the line for frequency band i, scaling it up a bit so we can see it
+    //   line(i, height, i, height - fft.getBand(i) * 8 );
+    // }
+
+    radio =  min(width, height) *  magnitude + height/3;
     
-    float x = radio * cos(i + angulo)* fft.getBand(PApplet.parseInt(i)*2);
-    float y = radio * sin(i + angulo)* fft.getBand(PApplet.parseInt(i)*2);
+    for (float i = 0; i < cantidadPuntos; i += incrementoAngulo + PApplet.parseInt(magnitude)) {
+    // for (float i = 0; i < fft.specSize(); i += incrementoAngulo + int(magnitude)) {
+      float x = radio * cos(i + angulo); //* fft.getBand(int(i)*2);
+      float y = radio * sin(i + angulo); //* fft.getBand(int(i)*2);
 
-    // println(fft.specSize());
+      // Dibuja cada punto
+      fill(255);
+      noStroke();
+      ellipse(x, y, size, size);
+    }
+    popMatrix();
+}
 
-    // Dibuja cada punto
-    fill(255);
-    noStroke();
-    ellipse(x, y, 2, 2);
-  }
 }
 
 class Module {
@@ -211,21 +219,22 @@ class Module {
 
     switch (shape) {
       case 0: // screen dots 
-      // pushMatrix();
-      //   ellipse(x, magnitude*size*y+y, size, size);
-      //     if (rotation) {
-      //       translate(random(0, width),random(0,height));
-      //       rotate(PI*radians(speed+=.1));
-      //     }
-      // popMatrix();     
+        pushMatrix();
+          ellipse(x, magnitude * size * y + y, size, size);
+            if (rotation) {
+              translate (random (0, width),random(0, height));
+              rotate (PI * radians (speed += .1f));
+            }
+        popMatrix();     
       break;
       case 1: // waveform
         ellipse(x, height/2 + magnitude*height/2, size,size);
       break;
       case 2:
-      fill(150);
-      stroke(150);
-      line(x, height/2, x, (height/2)+sin(TWO_PI/0.180f)*abs(magnitude*size*1000));          
+        fill(255);
+        stroke(255);
+        line(x, height/2, x, (height/2) + sin(TWO_PI/0.180f) * abs(magnitude * size * 1000));          
+        line(x, height/2, x, (height/2) - sin(TWO_PI/0.180f) * abs(magnitude * size * 1000));          
       break;
   }
   }
