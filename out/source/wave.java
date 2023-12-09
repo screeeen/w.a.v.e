@@ -51,6 +51,7 @@ Circle circle;
 int count;
 boolean overlay = true;
 String consoleText = "";
+boolean isCircle = true;
 
 
 
@@ -101,7 +102,7 @@ public void draw()
     mod.display();
   }
 
-  circle.display();
+  if (isCircle) circle.display();
 
   if (overlay) {
     fill(100);
@@ -152,7 +153,7 @@ class Circle {
       ellipse(x, y, size, size);
     }
     popMatrix();
-}
+  }
 
 }
 
@@ -259,6 +260,14 @@ public void keyPressed()
     mod.changeShape(currentShape);
     }
 
+  if (key == '2') {
+    if (isCircle == true) {
+      isCircle = false;
+      } else {
+      isCircle = true;
+      }
+    }
+
     if (key == 'r')
       if (!currentRotation) 
         currentRotation = true;
@@ -270,10 +279,10 @@ public void keyPressed()
     }   
 
     if (key == 's'){
-    currentSize += 1;
-    currentSize = currentSize %10;
-    consoleText = ("size " + currentSize);
-    }
+      currentSize += 1;
+      currentSize = currentSize %10;
+      consoleText = ("size " + currentSize);
+      }
     for (Module mod : mods) {
       if (currentRandom)
         mod.changeSize(currentSize*10);
@@ -282,21 +291,21 @@ public void keyPressed()
     }     
 
     if (key == 'a'){
-    currentRate += 1.0f;
-    currentRate = currentRate %10;
-    consoleText = ("rate " + currentRate);
-    }
-    for (Module mod : mods) {
-        mod.changeRate(currentRate);
+      currentRate += 1.0f;
+      currentRate = currentRate %10;
+      consoleText = ("rate " + currentRate);
+      }
+      for (Module mod : mods) {
+          mod.changeRate(currentRate);
     }     
 
     if (key == 'f'){
-    currentSpeed += .1f;
-    currentSpeed = currentSpeed %10;
-    consoleText = ("speed " + currentSpeed);
-    }
-    for (Module mod : mods) {
-    mod.changeSpeed(currentSpeed);
+      currentSpeed += .1f;
+      currentSpeed = currentSpeed %10;
+      consoleText = ("speed " + currentSpeed);
+      }
+      for (Module mod : mods) {
+      mod.changeSpeed(currentSpeed);
     } 
 
     if (key == 'd')
@@ -304,7 +313,6 @@ public void keyPressed()
         currentRandom = true;
       else 
         currentRandom = false;
-    consoleText = ("random " + currentRandom);
     for (Module mod : mods) {
     mod.setRandom(currentRandom);
     }   
@@ -314,11 +322,10 @@ public void keyPressed()
         currentDir = 1;
       else 
         currentDir = -1;
-    consoleText = ("direction " + currentDir);
-    for (Module mod : mods) {
-    mod.setDirection(currentDir);
+      consoleText = ("direction " + currentDir);
+      for (Module mod : mods) {
+      mod.setDirection(currentDir);
     }  
-
   }
 
 
