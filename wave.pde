@@ -92,7 +92,7 @@ class Circle {
     pushMatrix();
     translate(width / 2, height / 2);
     float incrementoAngulo = TWO_PI / cantidadPuntos;
-    float magnitude = in.left.get(x) * abs(10);
+    float magnitude = in.left.get(100) * abs(10);
     // angulo += 0.002 * magnitude;
     angulo += 0.002;
     // float magnitude = in.left.get(x) * abs(speed);
