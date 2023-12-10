@@ -106,7 +106,7 @@ class Circle {
 
     radio =  min(width, height) *  magnitude + height/3;
     
-    for (float i = 0; i < cantidadPuntos; i += incrementoAngulo + int(magnitude)) {
+    for (float i = 0; i < cantidadPuntos; i += incrementoAngulo) {
     // for (float i = 0; i < fft.specSize(); i += incrementoAngulo + int(magnitude)) {
       float x = radio * cos(i + angulo); //* fft.getBand(int(i)*2);
       float y = radio * sin(i + angulo); //* fft.getBand(int(i)*2);
