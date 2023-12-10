@@ -1,0 +1,370 @@
+import themidibus.*;
+
+import ddf.minim.*;
+import ddf.minim.analysis.*;
+import ddf.minim.effects.*;
+import ddf.minim.signals.*;
+import ddf.minim.spi.*;
+import ddf.minim.ugens.*;
+
+Minim minim;
+FFT fft;
+AudioInput input;
+AudioInput in;
+MidiBus myBus;
+
+int rows = 100;
+int columns = 200;
+int currentShape = 0;
+int currentSize = 2;
+int currentDir = 1;
+float currentRate = 1;
+float currentSpeed = 2;
+boolean currentRotation = false; 
+boolean currentRandom= false; 
+Module[] mods;
+Circle circle;
+Peixe peixe;
+int count;
+boolean overlay = true;
+String consoleText = "";
+boolean isCircle = true;
+boolean isPeixe = false;
+
+
+void setup() 
+{
+  // size(1000, 500, P3D);
+  // fullScreen(P3D);
+  // frameRate(30);
+
+  minim = new Minim(this);
+  in = minim.getLineIn();
+
+  circle = new Circle (); 
+  peixe = new Peixe();
+
+  peixe.setup();
+
+  noStroke();
+  generate();
+}
+
+void generate(){
+    int highCount = height / columns;
+    int wideCount =  width / rows;
+    count = wideCount * highCount;
+    println(count);
+
+    mods = new Module[count];
+
+    int index = 0;
+    for (int yCor = 0; yCor < highCount; yCor++) {
+      for(int xCor = 0; xCor < wideCount ; xCor++) 
+      {
+        mods[index++] = new Module (xCor*rows,yCor*columns);
+      }
+    }
+  }
+
+
+void destroyMods(){
+  mods = null;
+    generate();
+}
+
+void draw()
+{
+  background(0);
+  for (Module mod : mods) {
+    mod.update();
+    mod.display();
+  }
+
+  if (isCircle) circle.display();
+  if (isPeixe) peixe.display();
+
+  if (overlay) {
+    fill(100);
+    rect(0,height - 22, width, 20);
+    fill(255);
+    text(consoleText + "Z-show this -1-changes shape - A- audioMagnification - S - size	- R	-rotates -D-randomize - F- faster rotate - G- rotate direction ", 0, height-10);
+  }
+
+}
+
+
+class Circle {
+  float radio;
+  float angulo = 0;
+  int cantidadPuntos = 40;
+  int size = 2;
+  int speed = 1;
+  float magnitude;
+
+  Circle (){}
+
+  void display() {
+    pushMatrix();
+    translate(width / 2, height / 2);
+    float incrementoAngulo = TWO_PI / cantidadPuntos;
+    magnitude = in.left.get(200);
+    // angulo += 0.002 * magnitude;
+    angulo += 0.002;
+    // float magnitude = in.left.get(x) * abs(speed);
+    // fft = new FFT( in.bufferSize(), in.sampleRate());
+    // fft.forward( in.mix );
+
+    //   for(int i = 0; i < fft.specSize(); i++) {
+    //   // draw the line for frequency band i, scaling it up a bit so we can see it
+    //   line(i, height, i, height - fft.getBand(i) * 8 );
+    // }
+
+    radio =  min(width, height) *  magnitude + height/3;
+    
+    for (float i = 0; i < cantidadPuntos; i += incrementoAngulo + int(magnitude)) {
+    // for (float i = 0; i < fft.specSize(); i += incrementoAngulo + int(magnitude)) {
+      float x = radio * cos(i + angulo); //* fft.getBand(int(i)*2);
+      float y = radio * sin(i + angulo); //* fft.getBand(int(i)*2);
+
+      // Dibuja cada punto
+      fill(255);
+      noStroke();
+      ellipse(x, y, size, size);
+    }
+    popMatrix();
+  }
+
+}
+
+class Module {
+  int x;
+  int y;
+  int colorRange = 1;
+  float strokeRange = 150;
+  int shape = 0;  
+  int size = 2;
+  boolean rotation = false;
+  boolean randomize = false;
+  float speed = 1;
+  int rate = 1;
+  int direction = 1;
+
+  Module(int xPos,int yPos){
+  x = xPos;
+  y =  yPos;
+  }
+
+  void update (){
+      if (rotation) {
+        overlay = false;
+        translate(500, 250);
+        rotate(PI*(speed+=1));
+      }
+
+      if (randomize) {
+        translate(random(0,width/2),random(0,height/2));
+      }
+  }
+
+  void changeShape (int i) {
+    shape = i;
+  }
+
+  void changeRate (float rt) {
+    rate = rate;
+  }
+
+  void setDirection (int dir) {
+    direction = dir;
+  }
+
+  void setRandom (boolean d) {
+    randomize = d;
+  }
+
+  void changeRotation (boolean r) {
+    rotation = r;
+  }
+
+  void changeSize (int s) {
+    size = s;
+  }
+
+  void changeSpeed (float spd) {
+    speed = spd;
+  }
+
+  void display() {
+    float magnitude = in.left.get(x) * abs(speed);
+
+    switch (shape) {
+      case 0: // screen dots 
+        // pushMatrix();
+        //   ellipse(x, magnitude * size * y + y, size, size);
+        //     if (rotation) {
+        //       translate (random (0, width),random(0, height));
+        //       rotate (PI * radians (speed += .1));
+        //     }
+        // popMatrix();     
+      break;
+      case 1: // waveform
+        ellipse(x, height/2 + magnitude*height/2, size,size);
+      break;
+      case 2:
+        fill(255);
+        stroke(255);
+        line(x, height/2, x, (height/2) + sin(TWO_PI/0.180) * abs(magnitude * size * 1000));          
+        line(x, height/2, x, (height/2) - sin(TWO_PI/0.180) * abs(magnitude * size * 1000));          
+      break;
+  }
+  }
+}
+
+
+class Peixe {
+  int w = 1800;
+  int h = 600;
+  int scl = 16;
+  float fly = 0;
+  int sensitivity = 50;
+  int cols,rows;
+  float [][] terrain ;
+
+  void setup() {
+    cols = w/scl;
+    rows = h /scl;
+    terrain = new float[cols][rows];
+  }
+
+
+  Peixe (){}
+  
+  void display () {
+    fly -=.05;
+    float yoff = fly;
+    for ( int y = 0; y < rows; y++) {
+      float xoff = 0;
+      for (int x = 0; x < cols-1; x++) {
+        terrain[x][y] = map(noise(xoff, yoff), 0, 1, -100, abs(in.left.get(y) * sensitivity));
+        //terrain[x][y] = map(-in.left.get(y)*yoff,0,1,-100,100);
+        xoff +=0.1;
+      }
+      yoff += 0.1;
+    }
+
+    rotateX(PI/3.5);
+    translate(-width/2, h/2);
+    stroke(255);
+    noFill();
+
+    for (int y = 0; y < rows - 1; y++) {
+      beginShape(TRIANGLE_STRIP);
+      for ( int x = 0; x < cols; x++) {
+
+      vertex(x * scl, y * scl, terrain[x][y]);
+      vertex(x * scl, (y + 1) * scl, terrain[x][y + 1]);
+      }
+    endShape();
+    }
+  }
+}
+
+// INPUT
+void keyPressed()
+{
+   if (key == 'z') {
+      if (overlay)
+        overlay = false; 
+      else 
+        overlay = true;
+  }
+
+  if (key == '1')
+    currentShape += 1;
+    currentShape = currentShape %3;
+    consoleText = ("shape " + currentShape);
+      for (Module mod : mods) {
+    mod.changeShape(currentShape);
+    }
+
+  if (key == '2') {
+    if (isCircle == true) {
+      isCircle = false;
+      } else {
+      isCircle = true;
+      }
+    }
+
+  if (key == '3') {
+    if (isPeixe == true) {
+      isPeixe = false;
+      } else {
+      isPeixe = true;
+      }
+    }
+
+    if (key == 'r')
+      if (!currentRotation) 
+        currentRotation = true;
+      else 
+        currentRotation = false;
+      consoleText = ("rot " + currentRotation);
+    for (Module mod : mods) {
+    mod.changeRotation(currentRotation);
+    }   
+
+    if (key == 's'){
+      currentSize += 1;
+      currentSize = currentSize %10;
+      consoleText = ("size " + currentSize);
+      }
+    for (Module mod : mods) {
+      if (currentRandom)
+        mod.changeSize(currentSize*10);
+        else 
+        mod.changeSize(currentSize);
+    }     
+
+    if (key == 'a'){
+      currentRate += 1.0;
+      currentRate = currentRate %10;
+      consoleText = ("rate " + currentRate);
+      }
+      for (Module mod : mods) {
+          mod.changeRate(currentRate);
+    }     
+
+    if (key == 'f'){
+      currentSpeed += .1;
+      currentSpeed = currentSpeed %10;
+      consoleText = ("speed " + currentSpeed);
+      }
+      for (Module mod : mods) {
+      mod.changeSpeed(currentSpeed);
+    } 
+
+    if (key == 'd')
+      if (!currentRandom) 
+        currentRandom = true;
+      else 
+        currentRandom = false;
+    for (Module mod : mods) {
+    mod.setRandom(currentRandom);
+    }   
+
+    if (key == 'g')
+      if (currentDir == -1) 
+        currentDir = 1;
+      else 
+        currentDir = -1;
+      consoleText = ("direction " + currentDir);
+      for (Module mod : mods) {
+      mod.setDirection(currentDir);
+    }  
+  }
+
+
+
+
+

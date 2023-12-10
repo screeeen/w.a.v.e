@@ -37,8 +37,8 @@ AudioInput input;
 AudioInput in;
 MidiBus myBus;
 
-int rows = 6;
-int columns = 14;
+// int rows = 100;
+// int columns = 100;
 int currentShape = 0;
 int currentSize = 2;
 int currentDir = 1;
@@ -46,63 +46,52 @@ float currentRate = 1;
 float currentSpeed = 2;
 boolean currentRotation = false; 
 boolean currentRandom= false; 
-Module[] mods;
 Circle circle;
+Peixe peixe;
+Linea[] lineas;
 int count;
 boolean overlay = true;
 String consoleText = "";
+boolean isModule = false;
 boolean isCircle = true;
-
+boolean isPeixe = false;
 
 
 public void setup() 
 {
+  // size(1000, 500, P3D);
   
-  // fullScreen(P3D);
+
   minim = new Minim(this);
   in = minim.getLineIn();
 
-  noStroke();
-  generate();
+  circle = new Circle (); 
+  peixe = new Peixe();
 
-  
+  peixe.setup();
 
-}
+  int largo = in.bufferSize() - 1;
 
-public void generate(){
-    int highCount = height / columns;
-    int wideCount =  width / rows;
-    count = wideCount * highCount;
-    println(count);
+  lineas = new Linea[largo];
 
-    mods = new Module[count];
-
-    int index = 0;
-    for (int yCor = 0; yCor < highCount; yCor++) {
-      for(int xCor = 0; xCor < wideCount ; xCor++) 
-      {
-        mods[index++] = new Module (xCor*rows,yCor*columns);
-      }
-    }
-
-    circle = new Circle (); 
+  for(int i = 0; i < largo; i++) {
+    lineas[i] = new Linea(i, height/2);
   }
 
-
-public void destroyMods(){
-  mods = null;
-    generate();
+  noStroke();
 }
 
 public void draw()
 {
   background(0);
-  for (Module mod : mods) {
-    mod.update();
-    mod.display();
-  }
 
+  if (isModule){
+      for (Linea linea : lineas) {
+     linea.display();
+     }
+  }
   if (isCircle) circle.display();
+  if (isPeixe) peixe.display();
 
   if (overlay) {
     fill(100);
@@ -120,7 +109,6 @@ class Circle {
   int cantidadPuntos = 40;
   int size = 2;
   int speed = 1;
-  float magnitude;
 
   Circle (){}
 
@@ -128,7 +116,7 @@ class Circle {
     pushMatrix();
     translate(width / 2, height / 2);
     float incrementoAngulo = TWO_PI / cantidadPuntos;
-    magnitude = in.left.get(200);
+    float magnitude = in.left.get(x) * abs(10);
     // angulo += 0.002 * magnitude;
     angulo += 0.002f;
     // float magnitude = in.left.get(x) * abs(speed);
@@ -157,107 +145,101 @@ class Circle {
 
 }
 
-class Module {
-  int x;
-  int y;
-  int colorRange = 1;
-  float strokeRange = 150;
-  int shape = 0;  
+class Linea {
+  int wideCount = width / 10; //height / columns;
+  int speed = 2;
   int size = 2;
-  boolean rotation = false;
-  boolean randomize = false;
-  float speed = 1;
-  int rate = 1;
-  int direction = 1;
+  int x,y;
 
-  Module(int xPos,int yPos){
-  x = xPos;
-  y =  yPos;
+  Linea(int xPos, int yPos) {
+    x = xPos;
+    y = yPos;
   }
 
-  public void update (){
-      if (rotation) {
-        overlay = false;
-        translate(500, 250);
-        rotate(PI*(speed+=1));
-      }
-
-      if (randomize) {
-        translate(random(0,width/2),random(0,height/2));
-      }
-  }
-
-  public void changeShape (int i) {
-    shape = i;
-  }
-
-  public void changeRate (float rt) {
-    rate = rate;
-  }
-
-  public void setDirection (int dir) {
-    direction = dir;
-  }
-
-  public void setRandom (boolean d) {
-    randomize = d;
-  }
-
-  public void changeRotation (boolean r) {
-    rotation = r;
-  }
-
-  public void changeSize (int s) {
-    size = s;
-  }
-
-  public void changeSpeed (float spd) {
-    speed = spd;
-  }
 
   public void display() {
+    pushMatrix();
     float magnitude = in.left.get(x) * abs(speed);
-
-    switch (shape) {
-      case 0: // screen dots 
-        pushMatrix();
-          ellipse(x, magnitude * size * y + y, size, size);
-            if (rotation) {
-              translate (random (0, width),random(0, height));
-              rotate (PI * radians (speed += .1f));
-            }
-        popMatrix();     
-      break;
-      case 1: // waveform
-        ellipse(x, height/2 + magnitude*height/2, size,size);
-      break;
-      case 2:
-        fill(255);
-        stroke(255);
-        line(x, height/2, x, (height/2) + sin(TWO_PI/0.180f) * abs(magnitude * size * 1000));          
-        line(x, height/2, x, (height/2) - sin(TWO_PI/0.180f) * abs(magnitude * size * 1000));          
-      break;
-  }
-  }
+    ellipse(x*5, y + magnitude * y, size, size);
+    popMatrix();
+    }
 }
 
+
+class Peixe {
+  int w = 1800;
+  int h = 600;
+  int quadsFactor = 16;
+  float fly = 0;
+  int sensitivity = 500;
+  int cols,rows;
+  float [][] terrain ;
+  float roti = 3.5f;
+  float zoom = 0;
+
+  public void setup() {
+    cols = w/quadsFactor;
+    rows = h /quadsFactor;
+    terrain = new float[cols][rows];
+  }
+
+
+  Peixe (){}
+  
+  public void display () {
+    pushMatrix();
+    fly -=.01f;
+    float yoff = fly;
+    for ( int y = 0; y < rows; y++) {
+      float xoff = 0;
+      for (int x = 0; x < cols-1; x++) {
+        terrain[x][y] = map(noise(xoff, yoff), 0, 1, -100, abs(in.left.get(y) * sensitivity));
+        //terrain[x][y] = map(-in.left.get(y)*yoff,0,1,-100,100);
+        xoff +=0.1f;
+      }
+      yoff += 0.1f;
+    }
+
+    if (key == 'm') roti++;
+    if (key == 'n') roti--;
+    if (key == 'b') zoom++;
+    if (key == 'v') zoom--;
+  
+
+    rotateX(PI/roti);
+    translate(0, height/2, zoom);
+    stroke(255);
+    noFill();
+
+    for (int y = 0; y < rows - 1; y++) {
+      beginShape(TRIANGLE_STRIP);
+      for ( int x = 0; x < cols; x++) {
+
+      vertex(x * quadsFactor, y * quadsFactor, terrain[x][y]);
+      vertex(x * quadsFactor, (y + 1) * quadsFactor, terrain[x][y + 1]);
+      }
+    endShape();
+    }
+    popMatrix();
+  }
+}
 
 // INPUT
 public void keyPressed()
 {
-   if (key == 'z') {
-      if (overlay)
-        overlay = false; 
-      else 
-        overlay = true;
-  }
+  //  if (key == 'z') {
+  //     if (overlay)
+  //       overlay = false; 
+  //     else 
+  //       overlay = true;
+  // }
 
-  if (key == '1')
-    currentShape += 1;
-    currentShape = currentShape %3;
-    consoleText = ("shape " + currentShape);
-      for (Module mod : mods) {
-    mod.changeShape(currentShape);
+  if (key == '1') {
+    if (isModule == true) {
+      isModule = false;
+      } else {
+      isModule = true;
+      }
     }
 
   if (key == '2') {
@@ -268,71 +250,79 @@ public void keyPressed()
       }
     }
 
-    if (key == 'r')
-      if (!currentRotation) 
-        currentRotation = true;
-      else 
-        currentRotation = false;
-      consoleText = ("rot " + currentRotation);
-    for (Module mod : mods) {
-    mod.changeRotation(currentRotation);
-    }   
-
-    if (key == 's'){
-      currentSize += 1;
-      currentSize = currentSize %10;
-      consoleText = ("size " + currentSize);
+  if (key == '3') {
+    if (isPeixe == true) {
+      isPeixe = false;
+      } else {
+      isPeixe = true;
       }
-    for (Module mod : mods) {
-      if (currentRandom)
-        mod.changeSize(currentSize*10);
-        else 
-        mod.changeSize(currentSize);
-    }     
+    }
 
-    if (key == 'a'){
-      currentRate += 1.0f;
-      currentRate = currentRate %10;
-      consoleText = ("rate " + currentRate);
-      }
-      for (Module mod : mods) {
-          mod.changeRate(currentRate);
-    }     
+    // if (key == 'r')
+    //   if (!currentRotation) 
+    //     currentRotation = true;
+    //   else 
+    //     currentRotation = false;
+    //   consoleText = ("rot " + currentRotation);
+    // for (Module mod : mods) {
+    // mod.changeRotation(currentRotation);
+    // }   
 
-    if (key == 'f'){
-      currentSpeed += .1f;
-      currentSpeed = currentSpeed %10;
-      consoleText = ("speed " + currentSpeed);
-      }
-      for (Module mod : mods) {
-      mod.changeSpeed(currentSpeed);
-    } 
+    // if (key == 's'){
+    //   currentSize += 1;
+    //   currentSize = currentSize %10;
+    //   consoleText = ("size " + currentSize);
+    //   }
+    // for (Module mod : mods) {
+    //   if (currentRandom)
+    //     mod.changeSize(currentSize*10);
+    //     else 
+    //     mod.changeSize(currentSize);
+    // }     
 
-    if (key == 'd')
-      if (!currentRandom) 
-        currentRandom = true;
-      else 
-        currentRandom = false;
-    for (Module mod : mods) {
-    mod.setRandom(currentRandom);
-    }   
+    // if (key == 'a'){
+    //   currentRate += 1.0;
+    //   currentRate = currentRate %10;
+    //   consoleText = ("rate " + currentRate);
+    //   }
+    //   for (Module mod : mods) {
+    //       mod.changeRate(currentRate);
+    // }     
 
-    if (key == 'g')
-      if (currentDir == -1) 
-        currentDir = 1;
-      else 
-        currentDir = -1;
-      consoleText = ("direction " + currentDir);
-      for (Module mod : mods) {
-      mod.setDirection(currentDir);
-    }  
+    // if (key == 'f'){
+    //   currentSpeed += .1;
+    //   currentSpeed = currentSpeed %10;
+    //   consoleText = ("speed " + currentSpeed);
+    //   }
+    //   for (Module mod : mods) {
+    //   mod.changeSpeed(currentSpeed);
+    // } 
+
+    // if (key == 'd')
+    //   if (!currentRandom) 
+    //     currentRandom = true;
+    //   else 
+    //     currentRandom = false;
+    // for (Module mod : mods) {
+    // mod.setRandom(currentRandom);
+    // }   
+
+    // if (key == 'g')
+    //   if (currentDir == -1) 
+    //     currentDir = 1;
+    //   else 
+    //     currentDir = -1;
+    //   consoleText = ("direction " + currentDir);
+    //   for (Module mod : mods) {
+    //   mod.setDirection(currentDir);
+    // }  
   }
 
 
 
 
 
-  public void settings() {  size(1000, 500, P3D); }
+  public void settings() {  fullScreen(P3D,1); }
   static public void main(String[] passedArgs) {
     String[] appletArgs = new String[] { "wave" };
     if (passedArgs != null) {
