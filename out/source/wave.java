@@ -109,6 +109,7 @@ public void draw()
 }
 
 //////////////////////////////////
+
 class Joy {
   int w = 1800;
   int h = 600;
@@ -118,13 +119,10 @@ class Joy {
   int cols, rows;
   float[][] terrain;
   boolean hard = true;
-  int rott = 0;
-  float zoom = -155;
-  float yaxis = height/5;
-  float xaxis = width/5;
+  float zoom = 0;
+  float yaxis = height/2;
 
   FFT fft;
-  int fftIndex = 0;  // Added variable to keep track of FFT index
 
   Joy() {
   }
@@ -142,47 +140,53 @@ class Joy {
     stroke(255);
     noFill();
 
-    if (key == 'x') xaxis+=1;
-    if (key == 'c') xaxis-=1;
-    if (key == 'w') yaxis+=1;
-    if (key == 's') yaxis-=1;
-    if (key == 'e') zoom+=1;
-    if (key == 'd') zoom-=1;
-    if (key == 'r') rott+=1;
-    if (key == 'f') rott-=1;
+    // solo para linea
 
-    println(6969696);
-    println(yaxis);
-    println(xaxis);
-    println(zoom);
-    println(rott);
+    // for (int i = 0; i < fft.specSize(); i++) {
+    //   float x = map(i, 0, fft.specSize(), 0, width);
+    //   line(x, height / 2, x, height / 2 - fft.getBand(i) * 200);
+    // }
+
+    // if (key == 'w') yaxis-=1;
+    // if (key == 's') yaxis+=1;
+    // if (key == 'e') zoom-=1;
+    // if (key == 'd') zoom+=1;
+
+    // println(666999);
+    // println(yaxis);
+    // println(zoom);
 
     pushMatrix();
     rotateX(PI / 3.5f);
-    // rotateZ(radians(270));
-    
-    translate(xaxis, yaxis, zoom);
+    translate(0, 180, -250);
     fly -=.01f;
     float yoff = fly;
-    for (int x = 0; x < cols - 1; x++) {
+    for (int y = 0; y < rows; y++) {
       float xoff = 0;
-      beginShape(LINE_STRIP);
-      for (int y = 0; y < rows; y++) {
-        // Integrate FFT data into terrain generation
-        float fftValue = fft.getBand(fftIndex) * sensitivity;
-        terrain[x][y] = map(fftValue, 0, 1, -100, 100);
-        fftIndex = (fftIndex + 1) % fft.specSize();  // Increment and wrap around
+      for (int x = 0; x < cols - 1; x++) {
+          // Integrate FFT data into terrain generation
+          float fftValue = fft.getBand(x + y) * sensitivity;
+          // terrain[x][y] = map(noise(xoff, yoff), 0, 1, -100, abs(fftValue));
+          terrain[x][y] = map(fftValue, 0, 1, -100, 100);
+          // terrain[x][y] = map(in.left.get(y), 0, 1, -100, 100);
+        
         xoff += 0.1f;
-        vertex(x * quadsFactor, y * quadsFactor, terrain[x][y]);
+      }
+      yoff += 0.1f;
+    }
+
+    for (int y = 0; y < rows - 1; y++) {
+      beginShape(LINE_STRIP);  
+      for (int x = 0; x < cols; x++) {
+        // vertex(x * quadsFactor, y * quadsFactor, terrain[x][y]);
+        vertex(x * quadsFactor, (y + 1) * quadsFactor, terrain[x][y + 1]);
       }
       endShape();
-      yoff += 0.1f;
     }
 
     popMatrix();
   }
 }
-
 
 
 class Circle {
@@ -396,7 +400,7 @@ public void keyPressed()
 
 
 
-  public void settings() {  fullScreen(P3D); }
+  public void settings() {  fullScreen(P3D,1); }
   static public void main(String[] passedArgs) {
     String[] appletArgs = new String[] { "wave" };
     if (passedArgs != null) {
