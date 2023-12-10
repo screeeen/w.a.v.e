@@ -46,15 +46,20 @@ float currentRate = 1;
 float currentSpeed = 2;
 boolean currentRotation = false; 
 boolean currentRandom= false; 
+
+//clases
 Circle circle;
 Peixe peixe;
+Joy joy;
 Linea[] lineas;
 int count;
+
 boolean overlay = true;
 String consoleText = "";
 boolean isModule = false;
 boolean isCircle = true;
 boolean isPeixe = false;
+boolean isJoy = false;
 
 
 public void setup() 
@@ -67,13 +72,13 @@ public void setup()
 
   circle = new Circle (); 
   peixe = new Peixe();
-
   peixe.setup();
+  
+  joy = new Joy();
+  joy.setup();
 
   int largo = in.bufferSize() - 1;
-
   lineas = new Linea[largo];
-
   for(int i = 0; i < largo; i++) {
     lineas[i] = new Linea(i, height/2);
   }
@@ -92,15 +97,92 @@ public void draw()
   }
   if (isCircle) circle.display();
   if (isPeixe) peixe.display();
+  if (isJoy) joy.display();
 
   if (overlay) {
     fill(100);
     rect(0,height - 22, width, 20);
     fill(255);
-    text(consoleText + "Z-show this -1-changes shape - A- audioMagnification - S - size	- R	-rotates -D-randomize - F- faster rotate - G- rotate direction ", 0, height-10);
+    text(consoleText + "1,2,3 to change shapes", 0, height-10);
   }
 
 }
+
+//////////////////////////////////
+class Joy {
+  int w = 1800;
+  int h = 600;
+  int quadsFactor = 16;
+  float fly = 0;
+  float sensitivity = 0.2f;
+  int cols, rows;
+  float[][] terrain;
+  boolean hard = true;
+  int rott = 0;
+  float zoom = -155;
+  float yaxis = height/5;
+  float xaxis = width/5;
+
+  FFT fft;
+  int fftIndex = 0;  // Added variable to keep track of FFT index
+
+  Joy() {
+  }
+
+  public void setup() {
+    cols = w / quadsFactor;
+    rows = h / quadsFactor;
+    terrain = new float[cols][rows];
+    fft = new FFT(in.bufferSize(), in.sampleRate());
+  }
+
+  public void display() {
+    // Update FFT in the loop
+    fft.forward(in.mix);
+    stroke(255);
+    noFill();
+
+    if (key == 'x') xaxis+=1;
+    if (key == 'c') xaxis-=1;
+    if (key == 'w') yaxis+=1;
+    if (key == 's') yaxis-=1;
+    if (key == 'e') zoom+=1;
+    if (key == 'd') zoom-=1;
+    if (key == 'r') rott+=1;
+    if (key == 'f') rott-=1;
+
+    println(6969696);
+    println(yaxis);
+    println(xaxis);
+    println(zoom);
+    println(rott);
+
+    pushMatrix();
+    rotateX(PI / 3.5f);
+    // rotateZ(radians(270));
+    
+    translate(xaxis, yaxis, zoom);
+    fly -=.01f;
+    float yoff = fly;
+    for (int x = 0; x < cols - 1; x++) {
+      float xoff = 0;
+      beginShape(LINE_STRIP);
+      for (int y = 0; y < rows; y++) {
+        // Integrate FFT data into terrain generation
+        float fftValue = fft.getBand(fftIndex) * sensitivity;
+        terrain[x][y] = map(fftValue, 0, 1, -100, 100);
+        fftIndex = (fftIndex + 1) % fft.specSize();  // Increment and wrap around
+        xoff += 0.1f;
+        vertex(x * quadsFactor, y * quadsFactor, terrain[x][y]);
+      }
+      endShape();
+      yoff += 0.1f;
+    }
+
+    popMatrix();
+  }
+}
+
 
 
 class Circle {
@@ -117,23 +199,12 @@ class Circle {
     translate(width / 2, height / 2);
     float incrementoAngulo = TWO_PI / cantidadPuntos;
     float magnitude = in.left.get(100) * abs(10);
-    // angulo += 0.002 * magnitude;
     angulo += 0.002f;
-    // float magnitude = in.left.get(x) * abs(speed);
-    // fft = new FFT( in.bufferSize(), in.sampleRate());
-    // fft.forward( in.mix );
-
-    //   for(int i = 0; i < fft.specSize(); i++) {
-    //   // draw the line for frequency band i, scaling it up a bit so we can see it
-    //   line(i, height, i, height - fft.getBand(i) * 8 );
-    // }
-
     radio =  min(width, height) *  magnitude + height/3;
     
     for (float i = 0; i < cantidadPuntos; i += incrementoAngulo) {
-    // for (float i = 0; i < fft.specSize(); i += incrementoAngulo + int(magnitude)) {
-      float x = radio * cos(i + angulo); //* fft.getBand(int(i)*2);
-      float y = radio * sin(i + angulo); //* fft.getBand(int(i)*2);
+      float x = radio * cos(i + angulo);
+      float y = radio * sin(i + angulo);
 
       // Dibuja cada punto
       fill(255);
@@ -165,7 +236,6 @@ class Linea {
     }
 }
 
-
 class Peixe {
   int w = 1800;
   int h = 600;
@@ -174,15 +244,14 @@ class Peixe {
   int sensitivity = 500;
   int cols,rows;
   float [][] terrain ;
-  float roti = 3.5f;
-  float zoom = 0;
+  boolean hard = true;
+  
 
   public void setup() {
     cols = w/quadsFactor;
     rows = h /quadsFactor;
     terrain = new float[cols][rows];
   }
-
 
   Peixe (){}
   
@@ -193,21 +262,18 @@ class Peixe {
     for ( int y = 0; y < rows; y++) {
       float xoff = 0;
       for (int x = 0; x < cols-1; x++) {
-        terrain[x][y] = map(noise(xoff, yoff), 0, 1, -100, abs(in.left.get(y) * sensitivity));
-        //terrain[x][y] = map(-in.left.get(y)*yoff,0,1,-100,100);
+        if (hard) terrain[x][y] = map(noise(xoff, yoff), 0, 1, -100, abs(in.left.get(y) * sensitivity));
+        if (!hard) terrain[x][y] = map(in.left.get(y)+ noise(xoff, yoff), 0, 1, -100, 100);
         xoff +=0.1f;
       }
       yoff += 0.1f;
     }
 
-    if (key == 'm') roti++;
-    if (key == 'n') roti--;
-    if (key == 'b') zoom++;
-    if (key == 'v') zoom--;
-  
+    if (key == 'n') hard = true;
+    if (key == 'm') hard = false;
 
-    rotateX(PI/roti);
-    translate(0, height/2, zoom);
+    rotateX(PI/3.5f);
+    translate(0, height/2);
     stroke(255);
     noFill();
 
@@ -255,6 +321,14 @@ public void keyPressed()
       isPeixe = false;
       } else {
       isPeixe = true;
+      }
+    }
+
+  if (key == '4') {
+    if (isJoy == true) {
+      isJoy = false;
+      } else {
+      isJoy = true;
       }
     }
 
@@ -322,7 +396,7 @@ public void keyPressed()
 
 
 
-  public void settings() {  fullScreen(P3D,1); }
+  public void settings() {  fullScreen(P3D); }
   static public void main(String[] passedArgs) {
     String[] appletArgs = new String[] { "wave" };
     if (passedArgs != null) {
